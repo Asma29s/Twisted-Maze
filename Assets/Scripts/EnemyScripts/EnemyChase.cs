@@ -1,21 +1,27 @@
-
 using UnityEngine;
 using UnityEngine.AI;
+
 public class EnemyChase : MonoBehaviour
 {
-
+    [Header("References")]
     public Transform player;
+
+    [Header("Speeds")]
     public float chaseSpeed = 5f;
     public float wanderSpeed = 2f;
-    public float detectionRange = 15f;
-    public float wanderInterval = 3f;
 
-    private NavMeshAgent agent;
+    [Header("Detection")]
+    public float detectionRange = 15f;
+
+    [Header("Wandering")]
+    public float wanderInterval = 15f;
     private float wanderTimer;
 
-    // Maze bounds
+    [Header("Maze Bounds")]
     private float minX = -39f, maxX = 39f;
     private float minZ = -39f, maxZ = 39f;
+
+    private NavMeshAgent agent;
 
     void Start()
     {
@@ -38,6 +44,15 @@ public class EnemyChase : MonoBehaviour
             // Player not in sight: wander
             agent.speed = wanderSpeed;
             WanderRandomly();
+
+            // If agent reached destination, immediately get a new one
+            if (!agent.pathPending && agent.remainingDistance <= agent.stoppingDistance)
+            {
+                if (!agent.hasPath || agent.velocity.sqrMagnitude == 0f)
+                {
+                    WanderRandomly(); // Get new random destination immediately
+                }
+            }
         }
     }
 
@@ -76,24 +91,3 @@ public class EnemyChase : MonoBehaviour
         return false;
     }
 }
-
-
-
-    //public Transform Player;
-    //private UnityEngine.AI.NavMeshAgent agent;
-    //// Start is called once before the first execution of Update after the MonoBehaviour is created
-    //void Start()
-    //{
-
-    //    agent = GetComponent<UnityEngine.AI.NavMeshAgent>();
-    //}
-    //// Update is called once per frame
-    //void Update()
-    //{
-    //    if (Player != null)
-    //    {
-    //        agent.SetDestination(Player.position);
-    //    }
-    //}
-
-

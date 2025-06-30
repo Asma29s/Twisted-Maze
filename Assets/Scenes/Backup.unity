@@ -3202,6 +3202,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 0.7071068, z: -0, w: 0.7071068}
   m_LocalPosition: {x: 62.8, y: 2.7, z: 2.1191993}
+  m_LocalPosition: {x: 60, y: 2.7, z: 0}
   m_LocalScale: {x: 120, y: 5, z: 2}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -4687,6 +4688,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 0.7071068, z: -0, w: 0.7071068}
   m_LocalPosition: {x: 61.9, y: 0.15810609, z: 10.6}
+  m_LocalPosition: {x: 61.9, y: 0.15810609, z: 9.3}
   m_LocalScale: {x: 30, y: 5, z: 2}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -5480,6 +5482,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 60.6, y: 0.15810609, z: -36.5}
+  m_LocalPosition: {x: 57.3, y: 0.15810609, z: -36.5}
   m_LocalScale: {x: 54, y: 5, z: 2}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -7037,9 +7040,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0793562644d2f04489936d01e26b195d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speed: 5
   gravity: -9.81
   jumpHeight: 1.5
+  crouchKey: 306
+  standingHeight: 2
+  crouchingHeight: 1
+  walkSpeed: 5
+  sprintSpeed: 8
+  crouchSpeed: 2.5
+  sprintKey: 304
   controller: {fileID: 337762700658874753}
   cameraTransform: {fileID: 963194228}
   animator: {fileID: 545098655}

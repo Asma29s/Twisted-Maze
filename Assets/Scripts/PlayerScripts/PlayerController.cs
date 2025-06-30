@@ -27,24 +27,22 @@ public class PlayerController : MonoBehaviour
     private bool isCrouching = false;
     public KeyCode sprintKey = KeyCode.LeftShift;
 
-    [Header("--- Components ---")]
+
+
+
+    [Header("Components")]
     public CharacterController controller;
     public Transform cameraTransform;
-    //public Animator animator;
     public Image StaminaBarUI;
     public GameObject staminaOjbectUI;
    
     [Header("Stamina Settings")]
     public float stamina = 50f;
     public float maxStamina = 50f;
-
-    public float Stamina_drainRate = 1f;
-    public float Stamina_RechargeRate = 1f; // Recharge
-
+    public float Stamina_drainRate = 10f;
+    public float Stamina_RechargeRate = 10f; // Recharge
     bool Stamina_isFatigued; // 1) wouldn't allow player to sprint. 2) true when timer less than 10s
-
     private Coroutine rechargeCR;
-
     bool isRunning;
 
 
@@ -57,10 +55,9 @@ public class PlayerController : MonoBehaviour
         if (controller == null)
             controller = GetComponent<CharacterController>();
 
-        //if (animator == null)
-        //    animator = GetComponent<Animator>();
 
         currentSpeed = walkSpeed;
+        // currentStamina = maxStamina;
     }
 
     void Update()
@@ -129,6 +126,7 @@ public class PlayerController : MonoBehaviour
         // Optional: Set animation bool here if needed
         // animator.SetBool("isSprinting", Input.GetKey(sprintKey));
     }
+
 
     // Handles jump input
     void HandleJump()
