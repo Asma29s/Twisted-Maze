@@ -26,7 +26,20 @@ public class PlayerController : MonoBehaviour
     private bool isCrouching = false;
     public KeyCode sprintKey = KeyCode.LeftShift;
 
+<<<<<<< Updated upstream
     [Header("Components")]
+=======
+    // --- Stamina Settings ---
+    public float maxStamina = 100f;
+    public float currentStamina;
+    public float staminaRegenRate = 10f;
+    public float sprintStaminaCost = 20f;
+    public bool isSprinting = false;
+    public Slider staminaBar;
+
+
+    // --- Components ---
+>>>>>>> Stashed changes
     public CharacterController controller;
     public Transform cameraTransform;
     public Image StaminaBarUI;
@@ -61,7 +74,11 @@ public class PlayerController : MonoBehaviour
         HandleCrouching();
         HandleJump();
         ApplyGravity();
+<<<<<<< Updated upstream
         UpdateStamina();
+=======
+        HandleStamina();
+>>>>>>> Stashed changes
     }
 
     // Handles movement input and animation syncing
@@ -122,6 +139,28 @@ public class PlayerController : MonoBehaviour
     }
 
 
+<<<<<<< Updated upstream
+=======
+    public void HandleStamina()
+    {
+        if (Input.GetKey(KeyCode.LeftShift) && currentStamina > 0)
+        {
+            isSprinting = true;
+            currentStamina -= sprintStaminaCost * Time.deltaTime;
+        }
+        else
+        {
+            isSprinting = false;
+            currentStamina += staminaRegenRate * Time.deltaTime;
+        }
+
+        currentStamina = Mathf.Clamp(currentStamina, 0f, maxStamina);
+        staminaBar.value = currentStamina;
+    }
+
+
+
+>>>>>>> Stashed changes
     // Handles jump input
     void HandleJump()
     {
