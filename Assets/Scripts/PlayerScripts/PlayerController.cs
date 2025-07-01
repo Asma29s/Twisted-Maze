@@ -7,28 +7,24 @@ public class PlayerController : MonoBehaviour
 {
     
 
-    [Header("--- Movement & Physics ---")]
+    [Header("Movement & Physics ")]
     public float gravity = -9.81f;
     public float jumpHeight = 1.5f;
     private Vector3 velocity;
     private bool isGrounded;
 
- 
-    [Header("--- Crouch Settings ---")]
+    [Header("Crouch Settings ")]
     public KeyCode crouchKey = KeyCode.LeftControl; 
     public float standingHeight = 2.0f;
     public float crouchingHeight = 1.0f;
 
-    [Header("--- Speed Settings ---")]
+    [Header("Speed Settings ")]
     public float walkSpeed = 5f;
     public float sprintSpeed = 8f;
     public float crouchSpeed = 2.5f;
     private float currentSpeed;
     private bool isCrouching = false;
     public KeyCode sprintKey = KeyCode.LeftShift;
-
-
-
 
     [Header("Components")]
     public CharacterController controller;
@@ -44,8 +40,6 @@ public class PlayerController : MonoBehaviour
     bool Stamina_isFatigued; // 1) wouldn't allow player to sprint. 2) true when timer less than 10s
     private Coroutine rechargeCR;
     bool isRunning;
-
-
 
 
 
