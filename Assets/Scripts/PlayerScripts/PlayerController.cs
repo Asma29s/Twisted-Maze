@@ -5,20 +5,21 @@ using UnityEngine.UI;
 [RequireComponent(typeof(CharacterController))]
 public class PlayerController : MonoBehaviour
 {
-    
 
-    [Header("Movement & Physics ")]
+
+    [Header("--- Movement & Physics ---")]
     public float gravity = -9.81f;
     public float jumpHeight = 1.5f;
     private Vector3 velocity;
     private bool isGrounded;
 
-    [Header("Crouch Settings ")]
-    public KeyCode crouchKey = KeyCode.LeftControl; 
+
+    [Header("--- Crouch Settings ---")]
+    public KeyCode crouchKey = KeyCode.LeftControl;
     public float standingHeight = 2.0f;
     public float crouchingHeight = 1.0f;
 
-    [Header("Speed Settings ")]
+    [Header("--- Speed Settings ---")]
     public float walkSpeed = 5f;
     public float sprintSpeed = 8f;
     public float crouchSpeed = 2.5f;
@@ -26,33 +27,27 @@ public class PlayerController : MonoBehaviour
     private bool isCrouching = false;
     public KeyCode sprintKey = KeyCode.LeftShift;
 
-<<<<<<< Updated upstream
-    [Header("Components")]
-=======
-    // --- Stamina Settings ---
-    public float maxStamina = 100f;
-    public float currentStamina;
-    public float staminaRegenRate = 10f;
-    public float sprintStaminaCost = 20f;
-    public bool isSprinting = false;
-    public Slider staminaBar;
-
-
-    // --- Components ---
->>>>>>> Stashed changes
+    [Header("--- Components ---")]
     public CharacterController controller;
     public Transform cameraTransform;
+    //public Animator animator;
     public Image StaminaBarUI;
     public GameObject staminaOjbectUI;
-   
+
     [Header("Stamina Settings")]
     public float stamina = 50f;
     public float maxStamina = 50f;
-    public float Stamina_drainRate = 10f;
-    public float Stamina_RechargeRate = 10f; // Recharge
+
+    public float Stamina_drainRate = 1f;
+    public float Stamina_RechargeRate = 1f; // Recharge
+
     bool Stamina_isFatigued; // 1) wouldn't allow player to sprint. 2) true when timer less than 10s
+
     private Coroutine rechargeCR;
+
     bool isRunning;
+
+
 
 
 
@@ -62,9 +57,10 @@ public class PlayerController : MonoBehaviour
         if (controller == null)
             controller = GetComponent<CharacterController>();
 
+        //if (animator == null)
+        //    animator = GetComponent<Animator>();
 
         currentSpeed = walkSpeed;
-        // currentStamina = maxStamina;
     }
 
     void Update()
@@ -74,11 +70,7 @@ public class PlayerController : MonoBehaviour
         HandleCrouching();
         HandleJump();
         ApplyGravity();
-<<<<<<< Updated upstream
         UpdateStamina();
-=======
-        HandleStamina();
->>>>>>> Stashed changes
     }
 
     // Handles movement input and animation syncing
@@ -126,9 +118,9 @@ public class PlayerController : MonoBehaviour
         }
         else if (isCrouching)
             currentSpeed = crouchSpeed;
-        
-        if (Input.GetKeyUp(sprintKey)) 
-        { 
+
+        if (Input.GetKeyUp(sprintKey))
+        {
             isRunning = false;        // will stop the stamina from decreasing 
             currentSpeed = walkSpeed;
         }
@@ -138,29 +130,6 @@ public class PlayerController : MonoBehaviour
         // animator.SetBool("isSprinting", Input.GetKey(sprintKey));
     }
 
-
-<<<<<<< Updated upstream
-=======
-    public void HandleStamina()
-    {
-        if (Input.GetKey(KeyCode.LeftShift) && currentStamina > 0)
-        {
-            isSprinting = true;
-            currentStamina -= sprintStaminaCost * Time.deltaTime;
-        }
-        else
-        {
-            isSprinting = false;
-            currentStamina += staminaRegenRate * Time.deltaTime;
-        }
-
-        currentStamina = Mathf.Clamp(currentStamina, 0f, maxStamina);
-        staminaBar.value = currentStamina;
-    }
-
-
-
->>>>>>> Stashed changes
     // Handles jump input
     void HandleJump()
     {
@@ -188,7 +157,7 @@ public class PlayerController : MonoBehaviour
             if (stamina < 0) stamina = 0;
             StaminaBarUI.fillAmount = stamina / maxStamina; // UI effect: drain
 
-            if (stamina <= 0) 
+            if (stamina <= 0)
             {
                 if (rechargeCR != null) StopCoroutine(rechargeCR); // if recharge is working, stop it and start a new one
                 rechargeCR = StartCoroutine(RechargeStamina());
@@ -204,15 +173,15 @@ public class PlayerController : MonoBehaviour
 
     private IEnumerator RechargeStamina()
     {
-        Stamina_isFatigued = true; 
+        Stamina_isFatigued = true;
         yield return new WaitForSeconds(3f); //fixed delay is better than Stamina_fatigueTimer apperantly
         // is it going to wait then excute or wut
         // TODO : add an effect warning for 3 seconds 
         while (stamina < maxStamina)
         {
             stamina += Stamina_RechargeRate / 10f;
-            if (stamina > maxStamina) 
-                { stamina = maxStamina; } 
+            if (stamina > maxStamina)
+            { stamina = maxStamina; }
             StaminaBarUI.fillAmount = stamina / maxStamina;
 
             yield return new WaitForSeconds(0.1f); // try to set null idk
