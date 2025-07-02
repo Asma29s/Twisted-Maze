@@ -5,38 +5,23 @@ using UnityEngine.AI;
 
 public class WallPhaseManager : MonoBehaviour
 {
-    public List<GameObject> wallPhases;
-    public float phaseSwitchInterval = 20f;
-
+    public List<GameObject> wallPhases;   // Wall prefabs for each phase
     private int currentPhase = 0;
-    private float timer = 0f;
 
-    private NavMeshSurface navMeshSurface;
+    public NavMeshSurface navMeshSurface; // Assign this from the Inspector
 
-    void Start()
+    private void Start()
     {
-        navMeshSurface = Object.FindFirstObjectByType<NavMeshSurface>();
         ActivatePhase(currentPhase);
-        navMeshSurface.BuildNavMesh();  // Build initial NavMesh
+        BuildNavMesh();
     }
 
     void Update()
     {
-        timer += Time.deltaTime;
-
-        if (timer >= phaseSwitchInterval)
+        if (Input.GetKeyDown(KeyCode.Space))
         {
-            timer = 0f;
             SwitchToNextPhase();
         }
-    }
-
-    void SwitchToNextPhase()
-    {
-        wallPhases[currentPhase].SetActive(false);
-        currentPhase = (currentPhase + 1) % wallPhases.Count;
-        ActivatePhase(currentPhase);
-        navMeshSurface.BuildNavMesh();  // Update NavMesh after switching
     }
 
     void ActivatePhase(int index)
@@ -44,6 +29,26 @@ public class WallPhaseManager : MonoBehaviour
         for (int i = 0; i < wallPhases.Count; i++)
         {
             wallPhases[i].SetActive(i == index);
+        }
+    }
+
+    void SwitchToNextPhase()
+    {
+        // Switch wall
+        wallPhases[currentPhase].SetActive(false);
+        currentPhase = (currentPhase + 1) % wallPhases.Count;
+        wallPhases[currentPhase].SetActive(true);
+
+        // Trigger NavMesh update
+        BuildNavMesh();
+    }
+
+    void BuildNavMesh()
+    {
+        if (navMeshSurface != null)
+        {
+            navMeshSurface.RemoveData();   // Clear previous mesh (prevents stacking)
+            navMeshSurface.BuildNavMesh(); // Rebuild (you can use UpdateNavMesh() for future tile-based setups)
         }
     }
 }

@@ -18,8 +18,8 @@ public class EnemyChase : MonoBehaviour
     private float wanderTimer;
 
     [Header("Maze Bounds")]
-    private float minX = -39f, maxX = 39f;
-    private float minZ = -39f, maxZ = 39f;
+    private float minX = -154f, maxX = 154f;
+    private float minZ = -154f, maxZ = 154f;
 
     private NavMeshAgent agent;
 
