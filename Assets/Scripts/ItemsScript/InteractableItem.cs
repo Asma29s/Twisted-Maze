@@ -2,12 +2,22 @@ using UnityEngine;
 
 public class InteractableItem : MonoBehaviour
 {
-    public string itemName;
-
+    public keys keyName;
     public void PickUp()
     {
-        Debug.Log("Picked up: " + itemName);
-        // InventoryManager.Instance.AddItem(itemName);
-        Destroy(gameObject);
+        
+        if (gameObject.CompareTag("FlashLight"))
+        {
+            Debug.Log("Picked up: flashLight");
+            FlashlightSystem.Instance.FlashlightActive();
+            Destroy(gameObject);
+        }
+        if (gameObject.CompareTag("key"))
+        {
+            Debug.Log("Picked up: " + keyName.keyName);
+            InventorySystem.Instance.AddItem(keyName);
+            Destroy(gameObject);
+        }
     }
+
 }

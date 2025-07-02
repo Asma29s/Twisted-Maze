@@ -1,36 +1,35 @@
-using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
+using System;
+using System.Collections;
 
 [RequireComponent(typeof(CharacterController))]
 public class PlayerController : MonoBehaviour
 {
 
-
-    [Header("--- Movement & Physics ---")]
-    public float gravity = -9.81f;
-    public float jumpHeight = 1.5f;
-    private Vector3 velocity;
-    private bool isGrounded;
-
-
     [Header("--- Crouch Settings ---")]
-    public KeyCode crouchKey = KeyCode.LeftControl;
     public float standingHeight = 2.0f;
     public float crouchingHeight = 1.0f;
 
     [Header("--- Speed Settings ---")]
-    public float walkSpeed = 5f;
-    public float sprintSpeed = 8f;
-    public float crouchSpeed = 2.5f;
-    private float currentSpeed;
-    private bool isCrouching = false;
-    public KeyCode sprintKey = KeyCode.LeftShift;
+    [SerializeField] float walkSpeed = 3.5f;
+    [SerializeField] float sprintSpeed = 8f;
+    public float crouchSpeed = 2.5f; //////
+    private float currentSpeed; //same as max
+    private bool isCrouching = false; ///////
+
+    [Header("Movement parameters")]
+    public float maxSpeed => sprintInput && !Stamina_isFatigued ? sprintSpeed : walkSpeed;
+    public float acceleration = 15f;
+    // crouch 
+
 
     [Header("--- Components ---")]
     public CharacterController controller;
     public Transform cameraTransform;
-    //public Animator animator;
+    [SerializeField] Camera FPCamera;
+
+    [Header("UI Elements")]
     public Image StaminaBarUI;
     public GameObject staminaOjbectUI;
 
@@ -45,111 +44,216 @@ public class PlayerController : MonoBehaviour
 
     private Coroutine rechargeCR;
 
-    bool isRunning;
+    //bool isRunning;
+    public bool isSprinting // 
+    { // this for camera FOV, need it with stamina too 
+        get
+        {
+            return sprintInput && CurrentSpeed > 0.1f && stamina != 0 ;
+            // isSprinting true: sprintInput is pressed + moving + less than the period start + finish return false 
+        }
+    }
+
+    [Header("Looking parameters")]
+    public Vector2 lookSensitivity = new Vector2(0.1f, 0.1f);
+    public float pitchLimit = 80f; //lower it if wanted
+    [SerializeField] float currentPitch = 0f;
+    public float CurrentPitch
+    {
+        get => currentPitch;
+        set
+        {
+            currentPitch = Math.Clamp(value, -pitchLimit, pitchLimit);
+        }
+    }
+
+    [Header("Inputs")] // will be set from playerInputs scripts 
+    public Vector2 MoveInput;
+    public Vector2 LookInput;
+    public bool sprintInput;
+
+    [Header("Camera parameters")]
+    [SerializeField] float CameraNormalFOV = 60f;
+    [SerializeField] float CameraSprintFOV = 80f;
+    [SerializeField] float CameraFOVSmoothing = 3f; // change it when the FOV of the sprinting feels a lil snappy
+
+    float targetCameraFOV
+    {
+        get { return isSprinting ? CameraSprintFOV : CameraNormalFOV; }
+    }
 
 
+    [Header("Physics parameters")]
+    [SerializeField] float GravityScale = 3f;
+    [SerializeField] float VerticalVelocity = 0f;
+    public Vector3 currentVelocity; //{ get; private set; }
+    public float CurrentSpeed;
+
+    public bool isGrounded => controller.isGrounded;
+    [Space(15)]
+    [Tooltip("this is how high!")]
+    [SerializeField] float jumpHeight = 1.5f;
 
 
 
     void Start()
     {
-        // Ensure required components are assigned
+        currentSpeed = walkSpeed;
+        controller.height = standingHeight;
+    }
+
+    void OnValidate()
+    {
         if (controller == null)
             controller = GetComponent<CharacterController>();
-
-        //if (animator == null)
-        //    animator = GetComponent<Animator>();
-
-        currentSpeed = walkSpeed;
     }
 
     void Update()
     {
-        HandleSprinting();
-        HandleMovement();
-        HandleCrouching();
-        HandleJump();
-        ApplyGravity();
+        //HandleSprinting();
+        //HandleMovement();
+        MoveUpdate();
+        LookUpdate();
+        CameraUpdate();
+       // HandleCrouching();
+        //HandleJump();
+        //ApplyGravity();
         UpdateStamina();
     }
 
-    // Handles movement input and animation syncing
-    void HandleMovement()
+    public void TryJump()
     {
-        isGrounded = controller.isGrounded;
-
-        float x = Input.GetAxis("Horizontal");
-        float z = Input.GetAxis("Vertical");
-
-        // Use camera direction if needed
-        Vector3 move = transform.right * x + transform.forward * z;
-
-        controller.Move(move * currentSpeed * Time.deltaTime);
-
-        // Update animation blend parameter (assumes "xVelocity" is used in Animator)
-        //animator.SetFloat("xVelocity", Mathf.Abs(x) + Mathf.Abs(z));
+        if (!isGrounded)
+        {
+            return;
+        }
+        VerticalVelocity = Mathf.Sqrt(jumpHeight * -2f * Physics.gravity.y * GravityScale); //jump force 
     }
 
-    void HandleCrouching()
+    void MoveUpdate()
     {
-        if (Input.GetKeyDown(crouchKey))
+        // read 
+        Vector3 motion = transform.forward * MoveInput.y + transform.right * MoveInput.x; // reading values
+        motion.y = 0f; // so all the y movement happens in plane ofc
+        motion.Normalize();
+        // read to check
+        if (motion.sqrMagnitude >= 0.01f)
         {
-
-            // Change CharacterController height
-            controller.height = isCrouching ? crouchingHeight : standingHeight;
-            isCrouching = !isCrouching; // Toggle crouch
-
-            // Adjust center if needed to avoid clipping
-            controller.center = new Vector3(0, controller.height / 2f, 0);
-
-            // Optional: Set crouch animation
-            //animator.SetBool("isCrouching", isCrouching);
+            currentVelocity = Vector3.MoveTowards(currentVelocity, motion * maxSpeed, acceleration * Time.deltaTime);
         }
-    }
-
-
-    // Handles sprinting input
-    void HandleSprinting()
-    {
-        if (Input.GetKey(sprintKey) && !Stamina_isFatigued)
+        else
         {
-            currentSpeed = sprintSpeed;
-            isRunning = true;
-        }
-        else if (isCrouching)
-            currentSpeed = crouchSpeed;
-
-        if (Input.GetKeyUp(sprintKey))
-        {
-            isRunning = false;        // will stop the stamina from decreasing 
-            currentSpeed = walkSpeed;
+            currentVelocity = Vector3.MoveTowards(currentVelocity, Vector3.zero, acceleration * Time.deltaTime);
         }
 
 
-        // Optional: Set animation bool here if needed
-        // animator.SetBool("isSprinting", Input.GetKey(sprintKey));
+        // for jumping
+        if (isGrounded && VerticalVelocity <= 0.01f)
+        {
+            VerticalVelocity = -3f; // to keep character stuck to the ground (imp for climing staris ig)
+        }
+        else
+        {
+            VerticalVelocity += Physics.gravity.y * GravityScale * Time.deltaTime;
+        }
+
+        Vector3 fullVelocity = new Vector3(currentVelocity.x, VerticalVelocity, currentVelocity.z);
+
+        // move 
+        controller.Move(fullVelocity * Time.deltaTime);
+
+        // update
+        CurrentSpeed = currentVelocity.magnitude;
+
     }
+    void LookUpdate()
+    {
+        Vector2 lookInputs = new Vector2(LookInput.x * lookSensitivity.x, LookInput.y * lookSensitivity.y);
+        // up and down:
+        CurrentPitch -= lookInputs.y;
+
+        FPCamera.transform.localRotation = Quaternion.Euler(currentPitch, 0f, 0f);
+
+        // left and right:
+        transform.Rotate(Vector3.up * lookInputs.x);
+    }
+    void CameraUpdate()
+    {
+        // changing the lens of the camera to a target FOV in a specified time period
+        FPCamera.fieldOfView = Mathf.Lerp(FPCamera.fieldOfView, targetCameraFOV, CameraFOVSmoothing * Time.deltaTime);
+    }
+
+    //void HandleMovement()
+    //{
+    //    isGrounded = controller.isGrounded;
+
+    //    float x = Input.GetAxis("Horizontal");
+    //    float z = Input.GetAxis("Vertical");
+
+    //    // Use camera direction if needed
+    //    Vector3 move = transform.right * x + transform.forward * z;
+
+    //    controller.Move(move * currentSpeed * Time.deltaTime);
+
+    //    // Update animation blend parameter (assumes "xVelocity" is used in Animator)
+    //    //animator.SetFloat("xVelocity", Mathf.Abs(x) + Mathf.Abs(z));
+    //}
+
+    public void TryCrouching()
+    {
+        if (!isGrounded)
+        {
+            return;
+        }
+        // Change CharacterController height
+        controller.height = isCrouching ? crouchingHeight : standingHeight;
+        isCrouching = !isCrouching; // Toggle crouch
+
+        // Adjust center if needed to avoid clipping
+        controller.center = new Vector3(0, controller.height / 2f, 0);
+    }
+
+    //void HandleSprinting()
+    //{
+    //    if (Input.GetKey(sprintKey) && !Stamina_isFatigued)
+    //    {
+    //        currentSpeed = sprintSpeed;
+    //        isRunning = true;
+    //    }
+    //    else if (isCrouching)
+    //        currentSpeed = crouchSpeed;
+
+    //    if (Input.GetKeyUp(sprintKey))
+    //    {
+    //        isRunning = false;        // will stop the stamina from decreasing 
+    //        currentSpeed = walkSpeed;
+    //    }
+
+
+    //    // Optional: Set animation bool here if needed
+    //    // animator.SetBool("isSprinting", Input.GetKey(sprintKey));
+    //}
 
     // Handles jump input
-    void HandleJump()
-    {
-        if (isGrounded && Input.GetButtonDown("Jump"))
-            velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
-    }
+    //void HandleJump()
+    //{
+    //    if (isGrounded && Input.GetButtonDown("Jump"))
+    //        velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
+    //}
 
-    // Applies gravity every frame
-    void ApplyGravity()
-    {
-        if (isGrounded && velocity.y < 0)
-            velocity.y = -2f;
+    //// Applies gravity every frame
+    //void ApplyGravity()
+    //{
+    //    if (isGrounded && velocity.y < 0)
+    //        velocity.y = -2f;
 
-        velocity.y += gravity * Time.deltaTime;
-        controller.Move(velocity * Time.deltaTime);
-    }
+    //    velocity.y += gravity * Time.deltaTime;
+    //    controller.Move(velocity * Time.deltaTime);
+    //}
 
     void UpdateStamina()
     {
-        if (isRunning)
+        if (isSprinting)
         {
             staminaOjbectUI.SetActive(true);
             // start lowering the stamina based on time 
@@ -163,7 +267,7 @@ public class PlayerController : MonoBehaviour
                 rechargeCR = StartCoroutine(RechargeStamina());
             }
         }
-        else if (stamina >= maxStamina)
+        else if (stamina >= maxStamina) // stamina is full
         {
             staminaOjbectUI.SetActive(false);
         }

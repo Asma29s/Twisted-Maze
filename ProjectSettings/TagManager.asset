@@ -6,6 +6,8 @@ TagManager:
   tags:
   - Enemy
   - Interactable
+  - key
+  - FlashLight
   layers:
   - Default
   - TransparentFX
