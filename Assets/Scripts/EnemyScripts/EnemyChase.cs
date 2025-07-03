@@ -3,6 +3,21 @@ using UnityEngine.AI;
 
 public class EnemyChase : MonoBehaviour
 {
+
+    public Animator animator; 
+    public float jumpScareDuration = 3f;
+
+    public void TriggerJumpScare()
+    {
+        animator.SetTrigger("JumpScare"); // this is the parameter name in the animation controller settings 
+    }
+
+    public float GetJumpScareDuration()
+    {
+        return jumpScareDuration;
+    }
+
+
     [Header("References")]
     public Transform player;
 

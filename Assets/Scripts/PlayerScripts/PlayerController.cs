@@ -1,7 +1,9 @@
-using UnityEngine;
-using UnityEngine.UI;
 using System;
 using System.Collections;
+using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
+using static UnityEngine.EventSystems.EventTrigger;
 
 [RequireComponent(typeof(CharacterController))]
 public class PlayerController : MonoBehaviour
@@ -12,8 +14,8 @@ public class PlayerController : MonoBehaviour
     public float crouchingHeight = 1.0f;
 
     [Header("--- Speed Settings ---")]
-    [SerializeField] float walkSpeed = 3.5f;
-    [SerializeField] float sprintSpeed = 8f;
+    [SerializeField] float walkSpeed = 13f;
+    [SerializeField] float sprintSpeed = 26f;
     public float crouchSpeed = 2.5f; //////
     private float currentSpeed; //same as max
     private bool isCrouching = false; ///////
@@ -28,6 +30,8 @@ public class PlayerController : MonoBehaviour
     public CharacterController controller;
     public Transform cameraTransform;
     [SerializeField] Camera FPCamera;
+    public UIManager UIManager;
+    public JumpScare jumpScare; 
 
     [Header("UI Elements")]
     public Image StaminaBarUI;
@@ -43,6 +47,8 @@ public class PlayerController : MonoBehaviour
     bool Stamina_isFatigued; // 1) wouldn't allow player to sprint. 2) true when timer less than 10s
 
     private Coroutine rechargeCR;
+
+
 
     //bool isRunning;
     public bool isSprinting // 
@@ -106,6 +112,8 @@ public class PlayerController : MonoBehaviour
     {
         if (controller == null)
             controller = GetComponent<CharacterController>();
+        if (UIManager == null)
+            UIManager = GetComponent<UIManager>();
     }
 
     void Update()
@@ -113,12 +121,24 @@ public class PlayerController : MonoBehaviour
         //HandleSprinting();
         //HandleMovement();
         MoveUpdate();
-        LookUpdate();
+        //LookUpdate();
+        if (UIManager.isPaused)
+        {
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+        }
+        else
+        {
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+            LookUpdate(); // only call LookUpdate when not paused
+        }
         CameraUpdate();
        // HandleCrouching();
         //HandleJump();
         //ApplyGravity();
         UpdateStamina();
+        UpdatePause();
     }
 
     public void TryJump()
@@ -168,6 +188,7 @@ public class PlayerController : MonoBehaviour
     }
     void LookUpdate()
     {
+        if (!UIManager.isPaused && !EventSystem.current.IsPointerOverGameObject()) { 
         Vector2 lookInputs = new Vector2(LookInput.x * lookSensitivity.x, LookInput.y * lookSensitivity.y);
         // up and down:
         CurrentPitch -= lookInputs.y;
@@ -177,27 +198,14 @@ public class PlayerController : MonoBehaviour
         // left and right:
         transform.Rotate(Vector3.up * lookInputs.x);
     }
+    }
     void CameraUpdate()
     {
         // changing the lens of the camera to a target FOV in a specified time period
         FPCamera.fieldOfView = Mathf.Lerp(FPCamera.fieldOfView, targetCameraFOV, CameraFOVSmoothing * Time.deltaTime);
     }
 
-    //void HandleMovement()
-    //{
-    //    isGrounded = controller.isGrounded;
-
-    //    float x = Input.GetAxis("Horizontal");
-    //    float z = Input.GetAxis("Vertical");
-
-    //    // Use camera direction if needed
-    //    Vector3 move = transform.right * x + transform.forward * z;
-
-    //    controller.Move(move * currentSpeed * Time.deltaTime);
-
-    //    // Update animation blend parameter (assumes "xVelocity" is used in Animator)
-    //    //animator.SetFloat("xVelocity", Mathf.Abs(x) + Mathf.Abs(z));
-    //}
+   
 
     public void TryCrouching()
     {
@@ -212,44 +220,6 @@ public class PlayerController : MonoBehaviour
         // Adjust center if needed to avoid clipping
         controller.center = new Vector3(0, controller.height / 2f, 0);
     }
-
-    //void HandleSprinting()
-    //{
-    //    if (Input.GetKey(sprintKey) && !Stamina_isFatigued)
-    //    {
-    //        currentSpeed = sprintSpeed;
-    //        isRunning = true;
-    //    }
-    //    else if (isCrouching)
-    //        currentSpeed = crouchSpeed;
-
-    //    if (Input.GetKeyUp(sprintKey))
-    //    {
-    //        isRunning = false;        // will stop the stamina from decreasing 
-    //        currentSpeed = walkSpeed;
-    //    }
-
-
-    //    // Optional: Set animation bool here if needed
-    //    // animator.SetBool("isSprinting", Input.GetKey(sprintKey));
-    //}
-
-    // Handles jump input
-    //void HandleJump()
-    //{
-    //    if (isGrounded && Input.GetButtonDown("Jump"))
-    //        velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
-    //}
-
-    //// Applies gravity every frame
-    //void ApplyGravity()
-    //{
-    //    if (isGrounded && velocity.y < 0)
-    //        velocity.y = -2f;
-
-    //    velocity.y += gravity * Time.deltaTime;
-    //    controller.Move(velocity * Time.deltaTime);
-    //}
 
     void UpdateStamina()
     {
@@ -295,6 +265,43 @@ public class PlayerController : MonoBehaviour
         Stamina_isFatigued = false; // reset after done recharge, player will be able to sprint again
 
     }
+
+    public void UpdatePause() {    
+         
+        if (Input.GetKeyUp(KeyCode.Escape))
+             {
+            UIManager.ActivatePauseUI();
+            }
+    
+    }
+
+
+    public void OnCollisionEnter(UnityEngine.Collision collision)
+    {
+        if (collision.gameObject.CompareTag("Enemy"))
+        {
+            EnemyChase enemy = collision.gameObject.GetComponent<EnemyChase>(); // this for enemy animation 
+            // if no animation and just an image and a sound then leave it like this and change image
+            if (enemy != null)
+            {
+                //1. animation
+                jumpScare.TriggerJumpScare();
+                // timer till animation/sound is done
+                StartCoroutine(HandleJumpScare(enemy)); // will set ui active when timer is up
+
+            }
+        }
+    }
+
+    private IEnumerator HandleJumpScare(EnemyChase enemy)
+    {
+        // a wait for the enemy's jump scare *animation* to finish or a sound to play ( you choose)
+        yield return new WaitForSeconds(1f); //enemy.GetJumpScareDuration()
+
+        // activate death UI
+        UIManager.ActivateDeathUI();
+    }
+
 
 
 }

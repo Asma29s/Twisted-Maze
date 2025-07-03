@@ -5,9 +5,15 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/MAZE.unity
     guid: 26f628a19349e174da5f98037fb667f1
+  - enabled: 1
+    path: Assets/Scenes/MainMenu.unity
+    guid: f910f59050c057e44be6efdacbb4a541
+  - enabled: 1
+    path: Assets/Scenes/SamScene2.unity
+    guid: 4909a758c1329cb4ca3cbd7b23ea8734
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: a9df30668cf9bbc4eb8c5e1abc7dba81, type: 3}
   m_UseUCBPForAssetBundles: 0

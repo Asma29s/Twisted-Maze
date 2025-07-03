@@ -8,6 +8,7 @@ TagManager:
   - Interactable
   - key
   - FlashLight
+  - WinDoor
   layers:
   - Default
   - TransparentFX

@@ -3,6 +3,7 @@ using UnityEngine;
 public class InteractableItem : MonoBehaviour
 {
     public keys keyName;
+    public WinDoor winDoor;
     public void PickUp()
     {
         
@@ -11,6 +12,11 @@ public class InteractableItem : MonoBehaviour
             Debug.Log("Picked up: flashLight");
             FlashlightSystem.Instance.FlashlightActive();
             Destroy(gameObject);
+        }
+        if (gameObject.CompareTag("WinDoor"))
+        {
+            winDoor.PlayerWonCheck();
+            //check keys are full
         }
         if (gameObject.CompareTag("key"))
         {
